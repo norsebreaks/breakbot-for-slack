@@ -47,6 +47,7 @@ app.message(({ message }) => __awaiter(void 0, void 0, void 0, function* () {
 (() => __awaiter(void 0, void 0, void 0, function* () {
     yield app.start();
     message_handler_1.MessageHandler.channelId = channelId;
+    breakScheduler.readBreaksFromFile();
     console.log("Bolt server running");
 }))();
 //# sourceMappingURL=app.js.map

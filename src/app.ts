@@ -1,6 +1,7 @@
 import { BreakScheduler } from "./extensions/break-scheduler";
 import { DateTime } from "luxon";
 import { MessageHandler } from "./extensions/message-handler";
+import * as fs from "fs";
 
 const { App } = require("@slack/bolt");
 const app = new App({
@@ -43,5 +44,6 @@ app.message(async ({ message }) => {
 (async () => {
   await app.start();
   MessageHandler.channelId = channelId;
+  breakScheduler.readBreaksFromFile();
   console.log("Bolt server running");
 })();

@@ -2,6 +2,8 @@ import { BreakScheduler } from "./extensions/break-scheduler";
 import { DateTime } from "luxon";
 import { MessageHandler } from "./extensions/message-handler";
 import * as fs from "fs";
+import { GlobalSettings } from "./extensions/global-settings";
+import { InfoProvider } from "./extensions/info-provider";
 
 const { App } = require("@slack/bolt");
 const app = new App({
@@ -32,18 +34,28 @@ app.message(async ({ message }) => {
 
   //Message handler functions go below
 
-  ////First check if it is a type of break
+  ///First check if it is a type of break
   if(breakScheduler.breakNames().includes(msg.toLowerCase())){
     await breakScheduler.addStaffBreak(message.user, msg.toLowerCase());
   }
-  ////Then check if it is a break being cancelled
+  ///Then check if it is a break being cancelled
   if(msg.toLowerCase() == 'cancel'){
     await breakScheduler.cancelBreak(message.user);
   }
+
+  ////Other staff can go below
+  if(msg.toLowerCase() == '?'){
+    InfoProvider.postHelp();
+  }
+  if(msg.toLowerCase() == 'info'){
+    await breakScheduler.getWhoIsOnBreak();
+  }
 });
+
 (async () => {
   await app.start();
   MessageHandler.channelId = channelId;
   breakScheduler.readBreaksFromFile();
+  GlobalSettings.verboseLogging = false;
   console.log("Bolt server running");
 })();

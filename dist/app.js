@@ -11,6 +11,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const break_scheduler_1 = require("./extensions/break-scheduler");
 const message_handler_1 = require("./extensions/message-handler");
+const global_settings_1 = require("./extensions/global-settings");
+const info_provider_1 = require("./extensions/info-provider");
 const { App } = require("@slack/bolt");
 const app = new App({
     signingSecret: process.env.SLACK_SIGNING_SECRET,
@@ -35,19 +37,27 @@ app.message(({ message }) => __awaiter(void 0, void 0, void 0, function* () {
         msg = msg.slice(1);
     }
     //Message handler functions go below
-    ////First check if it is a type of break
+    ///First check if it is a type of break
     if (breakScheduler.breakNames().includes(msg.toLowerCase())) {
         yield breakScheduler.addStaffBreak(message.user, msg.toLowerCase());
     }
-    ////Then check if it is a break being cancelled
+    ///Then check if it is a break being cancelled
     if (msg.toLowerCase() == 'cancel') {
         yield breakScheduler.cancelBreak(message.user);
     }
+    if (msg.toLowerCase() == 'info') {
+        yield breakScheduler.getWhoIsOnBreak();
+    }
+    if (msg.toLowerCase() == '?') {
+        info_provider_1.InfoProvider.postHelp();
+    }
+    ////Other staff can go below
 }));
 (() => __awaiter(void 0, void 0, void 0, function* () {
     yield app.start();
     message_handler_1.MessageHandler.channelId = channelId;
     breakScheduler.readBreaksFromFile();
+    global_settings_1.GlobalSettings.verboseLogging = false;
     console.log("Bolt server running");
 }))();
 //# sourceMappingURL=app.js.map

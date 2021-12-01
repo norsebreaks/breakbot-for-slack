@@ -10,6 +10,7 @@ import {
 import { DateTime } from "luxon";
 import { MessageHandler } from "./message-handler";
 import * as fs from "fs";
+import { GlobalSettings } from "./global-settings";
 
 export class BreakScheduler {
   constructor() {}
@@ -98,7 +99,7 @@ export class BreakScheduler {
     return `Sorry *<@${userId}>*, there are already ${this.maxStaffBreaks} people away :unamused:`;
   }
   //Main functions
-  getWhoIsOnBreak(): string {
+  async getWhoIsOnBreak() {
     var responseString: string = "";
     //In here, you can adjust the message that sends depending on how many people are on breaks.
     //Manny's original ones are in here, but obviously will not account for if there are more than 2 people away at a time, but easy enough to adjust if needed.
@@ -114,8 +115,8 @@ export class BreakScheduler {
     }
     //Default return is that there is no one on break.
     responseString = this.noStaffOnBreakResponse();
-
-    return responseString;
+    return MessageHandler.postMessage(responseString);
+     
   }
 
   async addStaffBreak(userId: string, breakTypeName: string) {
@@ -146,7 +147,9 @@ export class BreakScheduler {
       startTime: DateHandler.currentDate(),
     };
     this.currentStaffBreaks.push(staffBreak);
-    console.log(`Added break for ${staffBreak.userId}`);
+    if (GlobalSettings.verboseLogging == true) {
+      console.log(`Added break for ${staffBreak.userId}`);
+    }
 
     await MessageHandler.postMessage(
       this.breakAddedResponse(
@@ -190,7 +193,9 @@ export class BreakScheduler {
     this.currentStaffBreaks = this.currentStaffBreaks.filter(
       (b) => b.userId != userId
     );
-    console.log(`Break cancelled for ${userId}`);
+    if (GlobalSettings.verboseLogging == true) {
+      console.log(`Break cancelled for ${userId}`);
+    }
     await MessageHandler.postMessage(this.breakCancelResponse(userId));
     this.saveBreaksToFile();
     return;
@@ -207,20 +212,27 @@ export class BreakScheduler {
     return true;
   }
 
-
   //File System Related Stuff
   saveBreaksToFile() {
-      fs.writeFile(`./${this.staffBreaksFileName}`, JSON.stringify(this.currentStaffBreaks), (err) =>{
-          if(err){
-              console.error(err);
-              return;
-          }
-          console.log(`Break list saved to ${this.staffBreaksFileName}.`)
-      })
+    fs.writeFile(
+      `./${this.staffBreaksFileName}`,
+      JSON.stringify(this.currentStaffBreaks),
+      (err) => {
+        if (err) {
+          console.error(err);
+          return;
+        }
+        if (GlobalSettings.verboseLogging == true) {
+          console.log(`Break list saved to ${this.staffBreaksFileName}.`);
+        }
+      }
+    );
   }
   readBreaksFromFile() {
     if (!fs.existsSync(`./${this.staffBreaksFileName}`)) {
-      console.log(`No ${this.staffBreaksFileName} to load.`);
+      if (GlobalSettings.verboseLogging == true) {
+        console.log(`No ${this.staffBreaksFileName} to load.`);
+      }
       return;
     }
     fs.readFile(`./${this.staffBreaksFileName}`, "utf8", (err, jsonString) => {

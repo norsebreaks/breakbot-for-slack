@@ -33,6 +33,7 @@ const date_handler_1 = require("./date-handler");
 const staff_break_1 = require("../models/staff-break");
 const message_handler_1 = require("./message-handler");
 const fs = __importStar(require("fs"));
+const global_settings_1 = require("./global-settings");
 class BreakScheduler {
     constructor() {
         this.maxStaffBreaks = 2;
@@ -113,22 +114,24 @@ class BreakScheduler {
     }
     //Main functions
     getWhoIsOnBreak() {
-        var responseString = "";
-        //In here, you can adjust the message that sends depending on how many people are on breaks.
-        //Manny's original ones are in here, but obviously will not account for if there are more than 2 people away at a time, but easy enough to adjust if needed.
-        switch (this.currentStaffBreaks.length) {
-            case 1:
-                responseString = this.onePersonOnBreakResponse();
-            case 2:
-                responseString = this.twoPeopleOnBreakResponse();
-        }
-        //For loop adds to response for each staff member on break;
-        for (var i = 0; i < this.currentStaffBreaks.length; i++) {
-            responseString += this.currentBreakPattern(this.currentStaffBreaks[i]);
-        }
-        //Default return is that there is no one on break.
-        responseString = this.noStaffOnBreakResponse();
-        return responseString;
+        return __awaiter(this, void 0, void 0, function* () {
+            var responseString = "";
+            //In here, you can adjust the message that sends depending on how many people are on breaks.
+            //Manny's original ones are in here, but obviously will not account for if there are more than 2 people away at a time, but easy enough to adjust if needed.
+            switch (this.currentStaffBreaks.length) {
+                case 1:
+                    responseString = this.onePersonOnBreakResponse();
+                case 2:
+                    responseString = this.twoPeopleOnBreakResponse();
+            }
+            //For loop adds to response for each staff member on break;
+            for (var i = 0; i < this.currentStaffBreaks.length; i++) {
+                responseString += this.currentBreakPattern(this.currentStaffBreaks[i]);
+            }
+            //Default return is that there is no one on break.
+            responseString = this.noStaffOnBreakResponse();
+            return message_handler_1.MessageHandler.postMessage(responseString);
+        });
     }
     addStaffBreak(userId, breakTypeName) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -150,7 +153,9 @@ class BreakScheduler {
                 startTime: date_handler_1.DateHandler.currentDate(),
             };
             this.currentStaffBreaks.push(staffBreak);
-            console.log(`Added break for ${staffBreak.userId}`);
+            if (global_settings_1.GlobalSettings.verboseLogging == true) {
+                console.log(`Added break for ${staffBreak.userId}`);
+            }
             yield message_handler_1.MessageHandler.postMessage(this.breakAddedResponse(staffBreak.userId, staffBreak.breakType, staff_break_1.getDueDate(staffBreak)));
             this.saveBreaksToFile();
             this.startBreak(staffBreak);
@@ -180,7 +185,9 @@ class BreakScheduler {
             clearTimeout(matchedStaffBreak.timer);
             //Removes staff break from list
             this.currentStaffBreaks = this.currentStaffBreaks.filter((b) => b.userId != userId);
-            console.log(`Break cancelled for ${userId}`);
+            if (global_settings_1.GlobalSettings.verboseLogging == true) {
+                console.log(`Break cancelled for ${userId}`);
+            }
             yield message_handler_1.MessageHandler.postMessage(this.breakCancelResponse(userId));
             this.saveBreaksToFile();
             return;
@@ -204,12 +211,16 @@ class BreakScheduler {
                 console.error(err);
                 return;
             }
-            console.log(`Break list saved to ${this.staffBreaksFileName}.`);
+            if (global_settings_1.GlobalSettings.verboseLogging == true) {
+                console.log(`Break list saved to ${this.staffBreaksFileName}.`);
+            }
         });
     }
     readBreaksFromFile() {
         if (!fs.existsSync(`./${this.staffBreaksFileName}`)) {
-            console.log(`No ${this.staffBreaksFileName} to load.`);
+            if (global_settings_1.GlobalSettings.verboseLogging == true) {
+                console.log(`No ${this.staffBreaksFileName} to load.`);
+            }
             return;
         }
         fs.readFile(`./${this.staffBreaksFileName}`, "utf8", (err, jsonString) => {

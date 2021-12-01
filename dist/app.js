@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const break_scheduler_1 = require("./extensions/break-scheduler");
+const message_handler_1 = require("./extensions/message-handler");
 const { App } = require("@slack/bolt");
 const app = new App({
     signingSecret: process.env.SLACK_SIGNING_SECRET,
@@ -19,7 +20,9 @@ const app = new App({
     port: process.env.PORT || 3000,
 });
 const hotword = process.env.HOT_WORD || '$bb';
+const channelId = process.env.SLACK_CHANNEL_ID;
 const breakScheduler = new break_scheduler_1.BreakScheduler();
+const messageHandler = new message_handler_1.MessageHandler(app);
 app.message(({ message, say }) => __awaiter(void 0, void 0, void 0, function* () {
     //Ignore all messages that don't start with $bb, by just returning
     if (!message.text.toLowerCase().startsWith('$bb')) {
@@ -32,12 +35,14 @@ app.message(({ message, say }) => __awaiter(void 0, void 0, void 0, function* ()
         msg = msg.slice(1);
     }
     //Message handler functions go below
+    ////First check if it is a type of break
     if (breakScheduler.breakNames().includes(msg.toLowerCase())) {
-        console.log(msg);
+        yield say(breakScheduler.addStaffBreak(message.user, msg.toLowerCase()));
     }
 }));
 (() => __awaiter(void 0, void 0, void 0, function* () {
     yield app.start();
+    message_handler_1.MessageHandler.channelId = channelId;
     console.log("Bolt server running");
 }))();
 //# sourceMappingURL=app.js.map

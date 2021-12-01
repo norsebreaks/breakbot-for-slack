@@ -1,5 +1,6 @@
 import { BreakScheduler } from "./extensions/break-scheduler";
 import { DateTime } from "luxon";
+import { MessageHandler } from "./extensions/message-handler";
 
 const { App } = require("@slack/bolt");
 const app = new App({
@@ -12,7 +13,9 @@ const app = new App({
 });
 
 const hotword = process.env.HOT_WORD || '$bb';
+const channelId = process.env.SLACK_CHANNEL_ID;
 const breakScheduler = new BreakScheduler();
+const messageHandler = new MessageHandler(app);
 
 app.message(async ({ message, say }) => {
   //Ignore all messages that don't start with $bb, by just returning
@@ -30,10 +33,11 @@ app.message(async ({ message, say }) => {
 
   ////First check if it is a type of break
   if(breakScheduler.breakNames().includes(msg.toLowerCase())){
-    breakScheduler.addStaffBreak(message.user, msg.toLowerCase());
+    await say(breakScheduler.addStaffBreak(message.user, msg.toLowerCase()));
   }
 });
 (async () => {
   await app.start();
+  MessageHandler.channelId = channelId;
   console.log("Bolt server running");
 })();

@@ -11,3 +11,6 @@ export function getDueDate(staffBreak: StaffBreak): DateTime{
     var due = DateHandler.dueDate(staffBreak.breakType.duration);
     return due;
 }
+export function timerMiliseconds(staffBreak: StaffBreak): number {
+    return (staffBreak.breakType.duration * 60) * 1000;    
+}

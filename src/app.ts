@@ -1,0 +1,39 @@
+import { BreakScheduler } from "./extensions/break-scheduler";
+import { DateTime } from "luxon";
+
+const { App } = require("@slack/bolt");
+const app = new App({
+  signingSecret: process.env.SLACK_SIGNING_SECRET,
+  token: process.env.SLACK_BOT_TOKEN,
+  appToken: process.env.SLACK_APP_TOKEN,
+  socketMode: true,
+  port: process.env.PORT || 3000,
+  //botId: process.env.BOT_USER_ID,
+});
+
+const hotword = process.env.HOT_WORD || '$bb';
+const breakScheduler = new BreakScheduler();
+
+app.message(async ({ message, say }) => {
+  //Ignore all messages that don't start with $bb, by just returning
+  if(!message.text.toLowerCase().startsWith('$bb')){
+    return;
+  }
+  //remove $bb from message for easier processing
+  var msg: string = message.text.slice(3);
+  //and then remove the next character if it's a space, provides safety if a user misses a space
+  if(msg[0] == ' '){
+    msg = msg.slice(1);
+  }
+
+  //Message handler functions go below
+
+  ////First check if it is a type of break
+  if(breakScheduler.breakNames().includes(msg.toLowerCase())){
+    breakScheduler.addStaffBreak(message.user, msg.toLowerCase());
+  }
+});
+(async () => {
+  await app.start();
+  console.log("Bolt server running");
+})();

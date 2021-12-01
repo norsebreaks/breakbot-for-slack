@@ -10,6 +10,7 @@ export class MessageHandler {
     static async postMessage(message: string, channelId?: string){
         if(this.channelId == null || this.channelId.length < 1){
             console.error("No bot channel specified");
+            return;
         }
         function channel(): string{
             if(channelId != null && channelId.length > 1){
@@ -19,9 +20,8 @@ export class MessageHandler {
         }
         var chatArgs: ChatPostMessageArguments = {
             channel: channel(),
-            text: message
         }
-        console.log(message);
+        chatArgs.text = message;
         var response = await this.boltApp.client.chat.postMessage(chatArgs);
         return response;
     }

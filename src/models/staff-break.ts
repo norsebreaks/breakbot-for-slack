@@ -6,6 +6,7 @@ export interface StaffBreak {
     userId: string;
     breakType: BreakType;
     startTime: DateTime;
+    timer?: NodeJS.Timeout;
 }
 export function getDueDate(staffBreak: StaffBreak): DateTime{
     var due = DateHandler.dueDate(staffBreak.breakType.duration);

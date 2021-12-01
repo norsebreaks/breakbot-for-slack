@@ -23,7 +23,7 @@ const hotword = process.env.HOT_WORD || '$bb';
 const channelId = process.env.SLACK_CHANNEL_ID;
 const breakScheduler = new break_scheduler_1.BreakScheduler();
 const messageHandler = new message_handler_1.MessageHandler(app);
-app.message(({ message, say }) => __awaiter(void 0, void 0, void 0, function* () {
+app.message(({ message }) => __awaiter(void 0, void 0, void 0, function* () {
     //Ignore all messages that don't start with $bb, by just returning
     if (!message.text.toLowerCase().startsWith('$bb')) {
         return;
@@ -37,7 +37,11 @@ app.message(({ message, say }) => __awaiter(void 0, void 0, void 0, function* ()
     //Message handler functions go below
     ////First check if it is a type of break
     if (breakScheduler.breakNames().includes(msg.toLowerCase())) {
-        yield say(breakScheduler.addStaffBreak(message.user, msg.toLowerCase()));
+        yield breakScheduler.addStaffBreak(message.user, msg.toLowerCase());
+    }
+    ////Then check if it is a break being cancelled
+    if (msg.toLowerCase() == 'cancel') {
+        yield breakScheduler.cancelBreak(message.user);
     }
 }));
 (() => __awaiter(void 0, void 0, void 0, function* () {

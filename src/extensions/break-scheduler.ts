@@ -49,12 +49,15 @@ export class BreakScheduler {
     }
     currentStaffBreaks: StaffBreak[] = [];
     
-    //These are the generic response strings
+    //These are the generic response strings, written as functions so that arguments can be passed if needed
     breakAddedResponse(userId: string, breakType: BreakType, dueTime: DateTime): string { 
         return `Hello *<@${userId}>* you can go to ${breakType.name} now ${breakType.emoji}
     see you back at *${dueTime.toFormat('t')}*`}
-    breakEndedResponse(){
-
+    breakCancelResponse(userId: string){
+        return `No worries *<@${userId}>*, welcome back! :no_mouth:`
+    }
+    breakCancelFailedResponse(userId: string){
+        return `You're not on break *<@${userId}>*, ya doofus! :no_mouth:`;
     }
     staffAlreadyOnBreakResponse(staffBreak: StaffBreak): string{
         return `*<@${staffBreak.userId}>*, you are *already* on ${staffBreak.breakType.name} you silly billy! :robot_face:`
@@ -99,8 +102,10 @@ export class BreakScheduler {
     }
 
     async addStaffBreak(userId: string, breakTypeName: string){
+
         //Check to see if user is already on a break
-        var matchedStaffBreak: StaffBreak = this.currentStaffBreaks.find(b => b.userId == userId);
+        var matchedStaffBreak: StaffBreak = this.currentStaffBreaks.find(b => b.userId == userId);   
+
         if(matchedStaffBreak != null){
             await MessageHandler.postMessage(this.staffAlreadyOnBreakResponse(matchedStaffBreak));
             return;
@@ -116,13 +121,14 @@ export class BreakScheduler {
         var staffBreak: StaffBreak = {
             userId: userId,
             breakType: this.breakTypes.find(b => b.name.toLowerCase() == breakTypeName.toLowerCase()),
-            startTime: DateHandler.currentDate
+            startTime: DateHandler.currentDate()
         }
         this.currentStaffBreaks.push(staffBreak);
         console.log(`Added break for ${staffBreak.userId}`);
         
         await MessageHandler.postMessage(this.breakAddedResponse(staffBreak.userId, staffBreak.breakType, getDueDate(staffBreak)));
         this.startBreak(staffBreak);
+        return;
     }
     async removeStaffBreak(userId:string){
         //First check to see if the user is actually on a break
@@ -134,9 +140,22 @@ export class BreakScheduler {
         this.currentStaffBreaks = this.currentStaffBreaks.filter(b => b.userId != userId);
         await MessageHandler.postMessage(this.staffBackFromBreakResponse(matchedStaffBreak));
     }
-
+    async cancelBreak(userId: string){
+        var matchedStaffBreak: StaffBreak = this.currentStaffBreaks.find(b => b.userId == userId);
+        if(matchedStaffBreak == null){
+            await MessageHandler.postMessage(this.breakCancelFailedResponse(userId));
+            return "User not in break list.";
+        } 
+        
+        clearTimeout(matchedStaffBreak.timer);
+        //Removes staff break from list
+        this.currentStaffBreaks = this.currentStaffBreaks.filter(b => b.userId != userId);
+        console.log(`Break cancelled for ${userId}`);
+        await MessageHandler.postMessage(this.breakCancelResponse(userId));
+        return;
+    }
     startBreak(staffBreak: StaffBreak){
-        setTimeout(() => {
+        staffBreak.timer = setTimeout(() => {
             this.removeStaffBreak(staffBreak.userId);
         }, timerMiliseconds(staffBreak));
     }

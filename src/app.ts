@@ -17,7 +17,7 @@ const channelId = process.env.SLACK_CHANNEL_ID;
 const breakScheduler = new BreakScheduler();
 const messageHandler = new MessageHandler(app);
 
-app.message(async ({ message, say }) => {
+app.message(async ({ message }) => {
   //Ignore all messages that don't start with $bb, by just returning
   if(!message.text.toLowerCase().startsWith('$bb')){
     return;
@@ -33,7 +33,11 @@ app.message(async ({ message, say }) => {
 
   ////First check if it is a type of break
   if(breakScheduler.breakNames().includes(msg.toLowerCase())){
-    await say(breakScheduler.addStaffBreak(message.user, msg.toLowerCase()));
+    await breakScheduler.addStaffBreak(message.user, msg.toLowerCase());
+  }
+  ////Then check if it is a break being cancelled
+  if(msg.toLowerCase() == 'cancel'){
+    await breakScheduler.cancelBreak(message.user);
   }
 });
 (async () => {

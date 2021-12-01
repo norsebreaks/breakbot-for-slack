@@ -18,6 +18,7 @@ class MessageHandler {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.channelId == null || this.channelId.length < 1) {
                 console.error("No bot channel specified");
+                return;
             }
             function channel() {
                 if (channelId != null && channelId.length > 1) {
@@ -27,9 +28,8 @@ class MessageHandler {
             }
             var chatArgs = {
                 channel: channel(),
-                text: message
             };
-            console.log(message);
+            chatArgs.text = message;
             var response = yield this.boltApp.client.chat.postMessage(chatArgs);
             return response;
         });

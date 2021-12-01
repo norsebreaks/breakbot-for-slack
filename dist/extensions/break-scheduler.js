@@ -49,20 +49,34 @@ class BreakScheduler {
                 emoji: ''
             }
         ];
-        this.currentStaffBreak = [];
+        this.currentStaffBreaks = [];
     }
-    //These are the generic response strings
+    breakNames() {
+        var names = [];
+        this.breakTypes.forEach(bt => {
+            names.push(bt.name.toLowerCase());
+        });
+        return names;
+    }
+    //These are the generic response strings, written as functions so that arguments can be passed if needed
     breakAddedResponse(userId, breakType, dueTime) {
         return `Hello *<@${userId}>* you can go to ${breakType.name} now ${breakType.emoji}
     see you back at *${dueTime.toFormat('t')}*`;
     }
-    breakEndedResponse() {
+    breakCancelResponse(userId) {
+        return `No worries *<@${userId}>*, welcome back! :no_mouth:`;
+    }
+    breakCancelFailedResponse(userId) {
+        return `You're not on break *<@${userId}>*, ya doofus! :no_mouth:`;
     }
     staffAlreadyOnBreakResponse(staffBreak) {
         return `*<@${staffBreak.userId}>*, you are *already* on ${staffBreak.breakType.name} you silly billy! :robot_face:`;
     }
     noStaffOnBreakResponse() {
         return "*No-one* is on break at the moment :upside_down_face:";
+    }
+    onePersonOnBreakResponse() {
+        return `There is *one* person away on at the moment - maybe you should join them *peow peow* :smirk:`;
     }
     twoPeopleOnBreakResponse() {
         return "There are *two* people away at the moment :sob:";
@@ -73,71 +87,94 @@ class BreakScheduler {
     staffBackFromBreakResponse(staffBreak) {
         return `*<@${staffBreak.userId}>* is back from ${staffBreak.breakType.name}! :robot_face:`;
     }
+    breakSlotsFullResponse(userId) {
+        return `Sorry *<@${userId}>*, there are already ${this.maxStaffBreaks} people away :unamused:`;
+    }
     //Main functions
     getWhoIsOnBreak() {
         var responseString = "";
         //In here, you can adjust the message that sends depending on how many people are on breaks.
-        //Manny's original ones are in here, but obviously will not account for if there are more than 2 people away at a time.
-        //It just adds to the responseString variable, to minimise code repetition.
-        if (this.currentStaffBreak.length == 1) {
-            responseString = `There is *one* person away on at the moment - maybe you should join them *peow peow* :smirk:`;
-        }
-        if (this.currentStaffBreak.length == 2) {
-            responseString = `There are *two* people away at the moment :sob:`;
+        //Manny's original ones are in here, but obviously will not account for if there are more than 2 people away at a time, but easy enough to adjust if needed.
+        switch (this.currentStaffBreaks.length) {
+            case 1:
+                responseString = this.onePersonOnBreakResponse();
+            case 2:
+                responseString = this.twoPeopleOnBreakResponse();
         }
         //For loop adds to response for each staff member on break;
-        for (var i = 0; i < this.currentStaffBreak.length; i++) {
-            responseString += this.currentBreakPattern(this.currentStaffBreak[i]);
+        for (var i = 0; i < this.currentStaffBreaks.length; i++) {
+            responseString += this.currentBreakPattern(this.currentStaffBreaks[i]);
         }
         //Default return is that there is no one on break.
         responseString = this.noStaffOnBreakResponse();
         return responseString;
     }
-    saveBreaksToFile() {
-    }
-    readBreaksFromFile() {
-    }
     addStaffBreak(userId, breakTypeName) {
         return __awaiter(this, void 0, void 0, function* () {
-            var matchedStaffBreak = this.currentStaffBreak.find(b => b.userId == userId);
+            //Check to see if user is already on a break
+            var matchedStaffBreak = this.currentStaffBreaks.find(b => b.userId == userId);
             if (matchedStaffBreak != null) {
                 yield message_handler_1.MessageHandler.postMessage(this.staffAlreadyOnBreakResponse(matchedStaffBreak));
                 return;
             }
+            //Then check to see if all the break slots are already used up
+            if (this.breakSlotAvailable() == false) {
+                yield message_handler_1.MessageHandler.postMessage(this.breakSlotsFullResponse(userId));
+                return;
+            }
+            //If those checks pass, then actually schedule the break
             var staffBreak = {
                 userId: userId,
                 breakType: this.breakTypes.find(b => b.name.toLowerCase() == breakTypeName.toLowerCase()),
-                startTime: date_handler_1.DateHandler.currentDate
+                startTime: date_handler_1.DateHandler.currentDate()
             };
-            this.currentStaffBreak.push(staffBreak);
+            this.currentStaffBreaks.push(staffBreak);
             console.log(`Added break for ${staffBreak.userId}`);
             yield message_handler_1.MessageHandler.postMessage(this.breakAddedResponse(staffBreak.userId, staffBreak.breakType, staff_break_1.getDueDate(staffBreak)));
             this.startBreak(staffBreak);
+            return;
         });
     }
     removeStaffBreak(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             //First check to see if the user is actually on a break
-            var matchedStaffBreak = this.currentStaffBreak.find(b => b.userId == userId);
+            var matchedStaffBreak = this.currentStaffBreaks.find(b => b.userId == userId);
             if (matchedStaffBreak == null) {
                 return "User not in break list.";
             }
             //Removes staff break from list
-            this.currentStaffBreak = this.currentStaffBreak.filter(b => b.userId != userId);
+            this.currentStaffBreaks = this.currentStaffBreaks.filter(b => b.userId != userId);
             yield message_handler_1.MessageHandler.postMessage(this.staffBackFromBreakResponse(matchedStaffBreak));
         });
     }
-    breakNames() {
-        var names = [];
-        this.breakTypes.forEach(bt => {
-            names.push(bt.name.toLowerCase());
+    cancelBreak(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var matchedStaffBreak = this.currentStaffBreaks.find(b => b.userId == userId);
+            if (matchedStaffBreak == null) {
+                return "User not in break list.";
+            }
+            clearTimeout(matchedStaffBreak.timer);
+            //Removes staff break from list
+            this.currentStaffBreaks = this.currentStaffBreaks.filter(b => b.userId != userId);
+            console.log(`Break cancelled for ${userId}`);
+            yield message_handler_1.MessageHandler.postMessage(this.breakCancelResponse(userId));
+            return;
         });
-        return names;
     }
     startBreak(staffBreak) {
-        setTimeout(() => {
+        staffBreak.timer = setTimeout(() => {
             this.removeStaffBreak(staffBreak.userId);
         }, staff_break_1.timerMiliseconds(staffBreak));
+    }
+    saveBreaksToFile() {
+    }
+    readBreaksFromFile() {
+    }
+    breakSlotAvailable() {
+        if (this.currentStaffBreaks.length == this.maxStaffBreaks) {
+            return false;
+        }
+        return true;
     }
 }
 exports.BreakScheduler = BreakScheduler;

@@ -33,6 +33,7 @@ const enableAwareResponses = eval(process.env.SLACK_BOT_AWARE_RESPONSE) || true;
 const slackBotIconUrl = process.env.SLACK_BOT_IMAGE_URL || "";
 const breakScheduler = new break_scheduler_1.BreakScheduler();
 const messageHandler = new message_handler_1.MessageHandler(app);
+const serverStartMessage = "BreakBot for Slack Started";
 //Starts the bot
 (() => __awaiter(void 0, void 0, void 0, function* () {
     yield app.start();
@@ -41,7 +42,7 @@ const messageHandler = new message_handler_1.MessageHandler(app);
     breakScheduler.readBreaksFromFile();
     trivia_provider_1.TriviaProvider.loadPointsFile();
     global_settings_1.GlobalSettings.verboseLogging = verboseLogging;
-    console.log("Bolt server running");
+    console.log(serverStartMessage);
 }))();
 //Incoming message handling
 app.message(({ message }) => __awaiter(void 0, void 0, void 0, function* () {

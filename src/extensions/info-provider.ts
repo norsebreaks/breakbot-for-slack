@@ -11,15 +11,14 @@ export class InfoProvider {
     '\n       `$bb break` for taking a 15 minute break' +
     '\n       `$bb training` for taking a 60 minute training session' +
     '\n       `$bb cancel` to cancel your break`' +
-    '\n- *random stuff*' +
-    '\n       `$bb trivia`' +
-    '\n       `$bb shillings` to see how many somali shillings are in yo bank' +
-    '\n       `$bb meme`' +
-    '\n       `$bb ron` for wisdom from the man himself' +
+    //'\n- *random stuff*' +
+    //'\n       `$bb trivia`' +
+    //'\n       `$bb shillings` to see how many somali shillings are in yo bank' +
+    //'\n       `$bb meme`' +
     '\n       `$bb dadjoke`' +
     '\n :robot_face:  :robot_face:  :robot_face:'
 }
-    static postHelp(){
+    static async postHelp(){
         MessageHandler.postMessage(this.helpMessage());
     }
 }

@@ -88,9 +88,9 @@ export class BreakScheduler {
     return "There are *two* people away at the moment :sob:";
   }
   currentBreakPattern(staffBreak: StaffBreak): string {
-    return `*<@${staffBreak.userId}>* is back at *${getDueDate(
+    return `\n*<@${staffBreak.userId}>* is back at *${getDueDate(
       staffBreak
-    )}* currently at *${staffBreak.breakType.name}*`;
+    ).toFormat("t")}* currently at *${staffBreak.breakType.name}*`;
   }
   staffBackFromBreakResponse(staffBreak: StaffBreak): string {
     return `*<@${staffBreak.userId}>* is back from ${staffBreak.breakType.name}! :robot_face:`;
@@ -99,24 +99,32 @@ export class BreakScheduler {
     return `Sorry *<@${userId}>*, there are already ${this.maxStaffBreaks} people away :unamused:`;
   }
   //Main functions
-  async getWhoIsOnBreak() {
+  getWhoIsOnBreak() {
     var responseString: string = "";
+    console.log(this.currentStaffBreaks.length);
     //In here, you can adjust the message that sends depending on how many people are on breaks.
     //Manny's original ones are in here, but obviously will not account for if there are more than 2 people away at a time, but easy enough to adjust if needed.
     switch (this.currentStaffBreaks.length) {
-      case 1:
+      case 1: {
         responseString = this.onePersonOnBreakResponse();
-      case 2:
+        break;
+      }
+      case 2: {
         responseString = this.twoPeopleOnBreakResponse();
+        break;
+      }
+      case 0: {
+        responseString = this.noStaffOnBreakResponse();
+        break;
+      }
     }
     //For loop adds to response for each staff member on break;
     for (var i = 0; i < this.currentStaffBreaks.length; i++) {
       responseString += this.currentBreakPattern(this.currentStaffBreaks[i]);
     }
     //Default return is that there is no one on break.
-    responseString = this.noStaffOnBreakResponse();
+
     return MessageHandler.postMessage(responseString);
-     
   }
 
   async addStaffBreak(userId: string, breakTypeName: string) {
@@ -240,13 +248,19 @@ export class BreakScheduler {
         console.log(`Error opening ${this.staffBreaksFileName}`);
         return;
       }
-      var breaksList: StaffBreak[] = JSON.parse(jsonString);
+      var breaksList: any[] = JSON.parse(jsonString);
       breaksList.forEach((staffBreak) => {
-        if (!breakExpired(staffBreak)) {
-          staffBreak.timer = setTimeout(() => {
-            this.removeStaffBreak(staffBreak.userId);
-          }, timerRemainingMiliseconds(staffBreak));
-          this.currentStaffBreaks.push(staffBreak);
+        var parsedBreak: StaffBreak = {
+          userId: staffBreak.userId,
+          breakType: staffBreak.breakType,
+          startTime: DateTime.fromISO(staffBreak.startTime),
+        };
+        if (!breakExpired(parsedBreak)) {
+          parsedBreak.timer = setTimeout(() => {
+            this.removeStaffBreak(parsedBreak.userId);
+          }, timerRemainingMiliseconds(parsedBreak));
+          this.currentStaffBreaks.push(parsedBreak);
+          console.log(this.currentStaffBreaks);
         }
       });
     });

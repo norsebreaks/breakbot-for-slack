@@ -31,6 +31,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BreakScheduler = void 0;
 const date_handler_1 = require("./date-handler");
 const staff_break_1 = require("../models/staff-break");
+const luxon_1 = require("luxon");
 const message_handler_1 = require("./message-handler");
 const fs = __importStar(require("fs"));
 const global_settings_1 = require("./global-settings");
@@ -104,7 +105,7 @@ class BreakScheduler {
         return "There are *two* people away at the moment :sob:";
     }
     currentBreakPattern(staffBreak) {
-        return `*<@${staffBreak.userId}>* is back at *${staff_break_1.getDueDate(staffBreak)}* currently at *${staffBreak.breakType.name}*`;
+        return `\n*<@${staffBreak.userId}>* is back at *${staff_break_1.getDueDate(staffBreak).toFormat("t")}* currently at *${staffBreak.breakType.name}*`;
     }
     staffBackFromBreakResponse(staffBreak) {
         return `*<@${staffBreak.userId}>* is back from ${staffBreak.breakType.name}! :robot_face:`;
@@ -114,24 +115,30 @@ class BreakScheduler {
     }
     //Main functions
     getWhoIsOnBreak() {
-        return __awaiter(this, void 0, void 0, function* () {
-            var responseString = "";
-            //In here, you can adjust the message that sends depending on how many people are on breaks.
-            //Manny's original ones are in here, but obviously will not account for if there are more than 2 people away at a time, but easy enough to adjust if needed.
-            switch (this.currentStaffBreaks.length) {
-                case 1:
-                    responseString = this.onePersonOnBreakResponse();
-                case 2:
-                    responseString = this.twoPeopleOnBreakResponse();
+        var responseString = "";
+        console.log(this.currentStaffBreaks.length);
+        //In here, you can adjust the message that sends depending on how many people are on breaks.
+        //Manny's original ones are in here, but obviously will not account for if there are more than 2 people away at a time, but easy enough to adjust if needed.
+        switch (this.currentStaffBreaks.length) {
+            case 1: {
+                responseString = this.onePersonOnBreakResponse();
+                break;
             }
-            //For loop adds to response for each staff member on break;
-            for (var i = 0; i < this.currentStaffBreaks.length; i++) {
-                responseString += this.currentBreakPattern(this.currentStaffBreaks[i]);
+            case 2: {
+                responseString = this.twoPeopleOnBreakResponse();
+                break;
             }
-            //Default return is that there is no one on break.
-            responseString = this.noStaffOnBreakResponse();
-            return message_handler_1.MessageHandler.postMessage(responseString);
-        });
+            case 0: {
+                responseString = this.noStaffOnBreakResponse();
+                break;
+            }
+        }
+        //For loop adds to response for each staff member on break;
+        for (var i = 0; i < this.currentStaffBreaks.length; i++) {
+            responseString += this.currentBreakPattern(this.currentStaffBreaks[i]);
+        }
+        //Default return is that there is no one on break.
+        return message_handler_1.MessageHandler.postMessage(responseString);
     }
     addStaffBreak(userId, breakTypeName) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -230,11 +237,17 @@ class BreakScheduler {
             }
             var breaksList = JSON.parse(jsonString);
             breaksList.forEach((staffBreak) => {
-                if (!staff_break_1.breakExpired(staffBreak)) {
-                    staffBreak.timer = setTimeout(() => {
-                        this.removeStaffBreak(staffBreak.userId);
-                    }, staff_break_1.timerRemainingMiliseconds(staffBreak));
-                    this.currentStaffBreaks.push(staffBreak);
+                var parsedBreak = {
+                    userId: staffBreak.userId,
+                    breakType: staffBreak.breakType,
+                    startTime: luxon_1.DateTime.fromISO(staffBreak.startTime),
+                };
+                if (!staff_break_1.breakExpired(parsedBreak)) {
+                    parsedBreak.timer = setTimeout(() => {
+                        this.removeStaffBreak(parsedBreak.userId);
+                    }, staff_break_1.timerRemainingMiliseconds(parsedBreak));
+                    this.currentStaffBreaks.push(parsedBreak);
+                    console.log(this.currentStaffBreaks);
                 }
             });
         });

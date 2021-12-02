@@ -29,6 +29,7 @@ const slackBotIconUrl = process.env.SLACK_BOT_IMAGE_URL || "";
 const breakScheduler = new BreakScheduler();
 const messageHandler = new MessageHandler(app);
 
+const serverStartMessage: string = "BreakBot for Slack Started";
 //Starts the bot
 (async () => {
   await app.start();
@@ -37,7 +38,7 @@ const messageHandler = new MessageHandler(app);
   breakScheduler.readBreaksFromFile();
   TriviaProvider.loadPointsFile();
   GlobalSettings.verboseLogging = verboseLogging;
-  console.log("Bolt server running");
+  console.log(serverStartMessage);
 })();
 
 

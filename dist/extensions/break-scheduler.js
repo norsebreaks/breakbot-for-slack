@@ -237,7 +237,6 @@ class BreakScheduler {
                         this.removeStaffBreak(parsedBreak.userId);
                     }, staff_break_1.timerRemainingMiliseconds(parsedBreak));
                     this.currentStaffBreaks.push(parsedBreak);
-                    console.log(this.currentStaffBreaks);
                 }
             });
         });

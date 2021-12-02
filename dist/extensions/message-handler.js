@@ -26,8 +26,15 @@ class MessageHandler {
                 }
                 return MessageHandler.channelId;
             }
+            function iconUrl() {
+                if (MessageHandler.iconUrl != null && MessageHandler.iconUrl.length > 0) {
+                    return MessageHandler.iconUrl;
+                }
+                return null;
+            }
             var chatArgs = {
                 channel: channel(),
+                icon_url: iconUrl()
             };
             chatArgs.text = message;
             var response = yield this.boltApp.client.chat.postMessage(chatArgs);

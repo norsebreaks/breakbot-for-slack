@@ -43,32 +43,22 @@ class BreakScheduler {
             {
                 name: "break",
                 duration: 15,
-                emoji: "",
+                emoji: ":fries:",
             },
             {
                 name: "lunch",
                 duration: 30,
-                emoji: "",
+                emoji: ":hamburger:",
             },
             {
                 name: "long",
                 duration: 45,
-                emoji: "",
+                emoji: ":bento:",
             },
             {
                 name: "training",
                 duration: 60,
-                emoji: "",
-            },
-            {
-                name: "test",
-                duration: 0.1,
-                emoji: "",
-            },
-            {
-                name: "30secs",
-                duration: 0.5,
-                emoji: "",
+                emoji: ":book:",
             },
         ];
         this.currentStaffBreaks = [];

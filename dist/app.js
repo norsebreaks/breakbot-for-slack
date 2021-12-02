@@ -16,6 +16,7 @@ const info_provider_1 = require("./extensions/info-provider");
 const dad_joke_provider_1 = require("./extensions/extras/dad-joke-provider");
 const meme_provider_1 = require("./extensions/extras/meme-provider");
 const trivia_provider_1 = require("./extensions/extras/trivia-provider");
+const aware_response_provider_1 = require("./extensions/extras/aware-response-provider");
 const { App } = require("@slack/bolt");
 const app = new App({
     signingSecret: process.env.SLACK_SIGNING_SECRET,
@@ -27,13 +28,27 @@ const app = new App({
 });
 const hotword = process.env.HOT_WORD || "$bb";
 const channelId = process.env.SLACK_CHANNEL_ID;
-const verboseLogging = eval(process.env.SLACK_BOT_VERBOSE_LOGS);
+const verboseLogging = eval(process.env.SLACK_BOT_VERBOSE_LOGS) || false;
+const enableAwareResponses = eval(process.env.SLACK_BOT_AWARE_RESPONSE) || true;
+const slackBotIconUrl = process.env.SLACK_BOT_IMAGE_URL || "";
 const breakScheduler = new break_scheduler_1.BreakScheduler();
 const messageHandler = new message_handler_1.MessageHandler(app);
+//Starts the bot
+(() => __awaiter(void 0, void 0, void 0, function* () {
+    yield app.start();
+    message_handler_1.MessageHandler.channelId = channelId;
+    message_handler_1.MessageHandler.iconUrl = slackBotIconUrl;
+    breakScheduler.readBreaksFromFile();
+    trivia_provider_1.TriviaProvider.loadPointsFile();
+    global_settings_1.GlobalSettings.verboseLogging = verboseLogging;
+    console.log("Bolt server running");
+}))();
+//Incoming message handling
 app.message(({ message }) => __awaiter(void 0, void 0, void 0, function* () {
     if (global_settings_1.GlobalSettings.verboseLogging) {
         console.log(message);
     }
+    //If there's no actual message, return.
     if (message.text == null) {
         if (global_settings_1.GlobalSettings.verboseLogging) {
             console.log("No message.text on object");
@@ -41,11 +56,18 @@ app.message(({ message }) => __awaiter(void 0, void 0, void 0, function* () {
         return;
     }
     //Ignore all messages that don't start with $bb, and when trivia mode is not active
-    if (!message.text.toLowerCase().startsWith("$bb") && trivia_provider_1.TriviaProvider.triviaActive() == false) {
+    if (!message.text.toLowerCase().startsWith("$bb") &&
+        trivia_provider_1.TriviaProvider.triviaActive() == false) {
+        //Optional check for non $bb messages
+        if (enableAwareResponses == true) {
+            //New options can be added in ./src/extensions/extras/aware-response-provider.ts
+            aware_response_provider_1.AwareResponseProvider.checkMessage(message.text);
+        }
         return;
     }
     //Only check trivia answers where $bb is excluded
-    if (!message.text.toLowerCase().startsWith("$bb") && trivia_provider_1.TriviaProvider.triviaActive() == true) {
+    if (!message.text.toLowerCase().startsWith("$bb") &&
+        trivia_provider_1.TriviaProvider.triviaActive() == true) {
         trivia_provider_1.TriviaProvider.checkUserAnswer(message.user, message.text);
         return;
     }
@@ -71,13 +93,14 @@ app.message(({ message }) => __awaiter(void 0, void 0, void 0, function* () {
     if (msg.toLowerCase() == "info") {
         breakScheduler.getWhoIsOnBreak();
     }
-    /////Example using DadJoke, can be found in ./extensions/extras
+    /////Example using DadJoke, can be found in ./src/extensions/extras
     if (msg.toLowerCase() == "dadjoke" || msg.toLowerCase() == "dad joke") {
         dad_joke_provider_1.DadJokeProvider.postToChannel();
     }
     if (msg.toLowerCase() == "meme") {
         meme_provider_1.MemeProvider.postToChannel();
     }
+    //////Trivia too, if desired
     if (msg.toLowerCase() == "trivia") {
         trivia_provider_1.TriviaProvider.postQuestionToChannel();
     }
@@ -85,12 +108,4 @@ app.message(({ message }) => __awaiter(void 0, void 0, void 0, function* () {
         trivia_provider_1.TriviaProvider.getPoints(message.user);
     }
 }));
-(() => __awaiter(void 0, void 0, void 0, function* () {
-    yield app.start();
-    message_handler_1.MessageHandler.channelId = channelId;
-    breakScheduler.readBreaksFromFile();
-    trivia_provider_1.TriviaProvider.loadPointsFile();
-    global_settings_1.GlobalSettings.verboseLogging = verboseLogging;
-    console.log("Bolt server running");
-}))();
 //# sourceMappingURL=app.js.map

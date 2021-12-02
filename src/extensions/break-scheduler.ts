@@ -20,32 +20,22 @@ export class BreakScheduler {
     {
       name: "break",
       duration: 15,
-      emoji: "",
+      emoji: ":fries:",
     },
     {
       name: "lunch",
       duration: 30,
-      emoji: "",
+      emoji: ":hamburger:",
     },
     {
       name: "long",
       duration: 45,
-      emoji: "",
+      emoji: ":bento:",
     },
     {
       name: "training",
       duration: 60,
-      emoji: "",
-    },
-    {
-      name: "test",
-      duration: 0.1,
-      emoji: "",
-    },
-    {
-      name: "30secs",
-      duration: 0.5,
-      emoji: "",
+      emoji: ":book:",
     },
   ];
   breakNames(): string[] {
@@ -64,9 +54,7 @@ export class BreakScheduler {
     breakType: BreakType,
     dueTime: DateTime
   ): string {
-    return `Hello *<@${userId}>* you can go to ${breakType.name} now ${
-      breakType.emoji
-    }
+    return `Hello *<@${userId}>* you can go to ${breakType.name} now ${breakType.emoji}
     see you back at *${dueTime.toFormat("t")}*`;
   }
   breakCancelResponse(userId: string) {
@@ -260,7 +248,6 @@ export class BreakScheduler {
             this.removeStaffBreak(parsedBreak.userId);
           }, timerRemainingMiliseconds(parsedBreak));
           this.currentStaffBreaks.push(parsedBreak);
-          console.log(this.currentStaffBreaks);
         }
       });
     });

@@ -27,6 +27,7 @@ const app = new App({
 });
 const hotword = process.env.HOT_WORD || "$bb";
 const channelId = process.env.SLACK_CHANNEL_ID;
+const verboseLogging = eval(process.env.SLACK_BOT_VERBOSE_LOGS);
 const breakScheduler = new break_scheduler_1.BreakScheduler();
 const messageHandler = new message_handler_1.MessageHandler(app);
 app.message(({ message }) => __awaiter(void 0, void 0, void 0, function* () {
@@ -89,7 +90,7 @@ app.message(({ message }) => __awaiter(void 0, void 0, void 0, function* () {
     message_handler_1.MessageHandler.channelId = channelId;
     breakScheduler.readBreaksFromFile();
     trivia_provider_1.TriviaProvider.loadPointsFile();
-    global_settings_1.GlobalSettings.verboseLogging = true;
+    global_settings_1.GlobalSettings.verboseLogging = verboseLogging;
     console.log("Bolt server running");
 }))();
 //# sourceMappingURL=app.js.map

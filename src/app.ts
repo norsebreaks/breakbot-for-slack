@@ -20,6 +20,7 @@ const app = new App({
 
 const hotword = process.env.HOT_WORD || "$bb";
 const channelId = process.env.SLACK_CHANNEL_ID;
+const verboseLogging: boolean = eval(process.env.SLACK_BOT_VERBOSE_LOGS);
 const breakScheduler = new BreakScheduler();
 const messageHandler = new MessageHandler(app);
 
@@ -88,6 +89,6 @@ app.message(async ({ message }) => {
   MessageHandler.channelId = channelId;
   breakScheduler.readBreaksFromFile();
   TriviaProvider.loadPointsFile();
-  GlobalSettings.verboseLogging = true;
+  GlobalSettings.verboseLogging = verboseLogging;
   console.log("Bolt server running");
 })();

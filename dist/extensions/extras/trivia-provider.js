@@ -120,10 +120,12 @@ class TriviaProvider {
                     shillingsAwarded: [],
                 };
                 newRecord.shillingsAwarded.push(points);
+                newRecord.total = trivia_record_1.totalPoints(newRecord);
                 this.triviaRecords.push(newRecord);
             }
             if (triviaRecord != null) {
                 triviaRecord.shillingsAwarded.push(points);
+                triviaRecord.total = trivia_record_1.totalPoints(triviaRecord);
             }
             message_handler_1.MessageHandler.postMessage(this.correctAnswerMessage(userId, points));
             this.savePointsFile();

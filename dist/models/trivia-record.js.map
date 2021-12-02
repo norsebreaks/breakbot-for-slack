@@ -1,0 +1,1 @@
+{"version":3,"file":"trivia-record.js","sourceRoot":"","sources":["../../src/models/trivia-record.ts"],"names":[],"mappings":";;;AAIA,SAAgB,WAAW,CAAC,YAAyB;IACjD,IAAI,GAAG,GAAG,YAAY,CAAC,gBAAgB,CAAC,MAAM,CAAC,CAAC,CAAC,EAAE,CAAC,EAAE,EAAE,CAAC,CAAC,GAAG,CAAC,EAAE,CAAC,CAAC,CAAC;IACnE,OAAO,GAAG,CAAC;AACf,CAAC;AAHD,kCAGC"}

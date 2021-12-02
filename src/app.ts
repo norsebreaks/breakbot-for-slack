@@ -6,6 +6,7 @@ import { GlobalSettings } from "./extensions/global-settings";
 import { InfoProvider } from "./extensions/info-provider";
 import { DadJokeProvider } from "./extensions/extras/dad-joke-provider";
 import { MemeProvider } from "./extensions/extras/meme-provider";
+import { TriviaProvider } from "./extensions/extras/trivia-provider";
 
 const { App } = require("@slack/bolt");
 const app = new App({
@@ -32,8 +33,13 @@ app.message(async ({ message }) => {
     }
     return;
   }
-  //Ignore all messages that don't start with $bb, by just returning
-  if (!message.text.toLowerCase().startsWith("$bb")) {
+  //Ignore all messages that don't start with $bb, and when trivia mode is not active
+  if (!message.text.toLowerCase().startsWith("$bb") && TriviaProvider.triviaActive() == false) {
+    return;
+  }
+  //Only check trivia answers where $bb is excluded
+  if(!message.text.toLowerCase().startsWith("$bb") && TriviaProvider.triviaActive() == true){
+    TriviaProvider.checkUserAnswer(message.user, message.text);
     return;
   }
   //remove $bb from message for easier processing
@@ -69,12 +75,19 @@ app.message(async ({ message }) => {
   if (msg.toLowerCase() == "meme") {
     MemeProvider.postToChannel();
   }
+  if(msg.toLowerCase() == "trivia"){
+    TriviaProvider.postQuestionToChannel();
+  }
+  if(msg.toLowerCase() == "shillings"){
+    TriviaProvider.getPoints(message.user);
+  }
 });
 
 (async () => {
   await app.start();
   MessageHandler.channelId = channelId;
   breakScheduler.readBreaksFromFile();
+  TriviaProvider.loadPointsFile();
   GlobalSettings.verboseLogging = true;
   console.log("Bolt server running");
 })();

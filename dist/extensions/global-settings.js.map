@@ -1,1 +1,1 @@
-{"version":3,"file":"global-settings.js","sourceRoot":"","sources":["../../src/extensions/global-settings.ts"],"names":[],"mappings":";;;AAAA,MAAa,cAAc;;AAA3B,wCAEC;AADU,6BAAc,GAAY,KAAK,CAAC"}
+{"version":3,"file":"global-settings.js","sourceRoot":"","sources":["../../src/extensions/global-settings.ts"],"names":[],"mappings":";;;AAAA,MAAa,cAAc;;AAA3B,wCAGC;AAFU,6BAAc,GAAY,KAAK,CAAC;AAChC,8BAAe,GAAW,iBAAiB,CAAA"}

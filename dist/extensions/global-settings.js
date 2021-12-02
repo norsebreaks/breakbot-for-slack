@@ -5,4 +5,5 @@ class GlobalSettings {
 }
 exports.GlobalSettings = GlobalSettings;
 GlobalSettings.verboseLogging = false;
+GlobalSettings.triviaPointName = "Somali Shilling";
 //# sourceMappingURL=global-settings.js.map

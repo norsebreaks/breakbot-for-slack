@@ -15,6 +15,7 @@ const global_settings_1 = require("./extensions/global-settings");
 const info_provider_1 = require("./extensions/info-provider");
 const dad_joke_provider_1 = require("./extensions/extras/dad-joke-provider");
 const meme_provider_1 = require("./extensions/extras/meme-provider");
+const trivia_provider_1 = require("./extensions/extras/trivia-provider");
 const { App } = require("@slack/bolt");
 const app = new App({
     signingSecret: process.env.SLACK_SIGNING_SECRET,
@@ -38,8 +39,13 @@ app.message(({ message }) => __awaiter(void 0, void 0, void 0, function* () {
         }
         return;
     }
-    //Ignore all messages that don't start with $bb, by just returning
-    if (!message.text.toLowerCase().startsWith("$bb")) {
+    //Ignore all messages that don't start with $bb, and when trivia mode is not active
+    if (!message.text.toLowerCase().startsWith("$bb") && trivia_provider_1.TriviaProvider.triviaActive() == false) {
+        return;
+    }
+    //Only check trivia answers where $bb is excluded
+    if (!message.text.toLowerCase().startsWith("$bb") && trivia_provider_1.TriviaProvider.triviaActive() == true) {
+        trivia_provider_1.TriviaProvider.checkUserAnswer(message.user, message.text);
         return;
     }
     //remove $bb from message for easier processing
@@ -71,11 +77,18 @@ app.message(({ message }) => __awaiter(void 0, void 0, void 0, function* () {
     if (msg.toLowerCase() == "meme") {
         meme_provider_1.MemeProvider.postToChannel();
     }
+    if (msg.toLowerCase() == "trivia") {
+        trivia_provider_1.TriviaProvider.postQuestionToChannel();
+    }
+    if (msg.toLowerCase() == "shillings") {
+        trivia_provider_1.TriviaProvider.getPoints(message.user);
+    }
 }));
 (() => __awaiter(void 0, void 0, void 0, function* () {
     yield app.start();
     message_handler_1.MessageHandler.channelId = channelId;
     breakScheduler.readBreaksFromFile();
+    trivia_provider_1.TriviaProvider.loadPointsFile();
     global_settings_1.GlobalSettings.verboseLogging = true;
     console.log("Bolt server running");
 }))();
